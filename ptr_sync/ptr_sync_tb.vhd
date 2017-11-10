@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 -- NAME:        ptr_sync_tb.vhd
--- DESCRPTION:  Testbench for pointer synchronizer component.
+-- DESCRIPTION: Testbench for pointer synchronizer component.
 -- AUTHOR:      Brad Kahn
 -- DATE:        10/11/2017
 -------------------------------------------------------------------------------
@@ -18,24 +18,24 @@ architecture behavior of ptr_sync_tb is
   -----------------------------------------------------------------------------
   component ptr_sync
   port(
-    i_PTR_IN  : in  std_logic_vector((4 - 1) downto 0);
+    i_PTR_IN  : in  std_logic_vector(4-1 downto 0);
     i_CLK     : in  std_logic;
     i_RST     : in  std_logic;
-    o_PTR_OUT : out std_logic_vector((4 - 1) downto 0)
+    o_PTR_OUT : out std_logic_vector(4-1 downto 0)
   );
   end component;
 
   -----------------------------------------------------------------------------
   -- Inputs
   -----------------------------------------------------------------------------
-  signal i_PTR_IN  : std_logic_vector((4 - 1) downto 0) := (others => '0');
+  signal i_PTR_IN  : std_logic_vector(4-1 downto 0) := (others => '0');
   signal i_CLK     : std_logic := '0';
   signal i_RST     : std_logic := '0';
 
   -----------------------------------------------------------------------------
   -- Outputs
   -----------------------------------------------------------------------------
-  signal o_PTR_OUT : std_logic_vector((4 - 1) downto 0);
+  signal o_PTR_OUT : std_logic_vector(4-1 downto 0);
 
   -----------------------------------------------------------------------------
   -- Clock period definitions
