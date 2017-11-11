@@ -10,10 +10,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity ptr_sync is
-  generic(
+  generic (
     g_ADDR_WIDTH : positive := 4
   );
-  port(
+  port (
     i_PTR_IN  : in  std_logic_vector(g_ADDR_WIDTH-1 downto 0);
     i_CLK     : in  std_logic;
     i_RST     : in  std_logic;

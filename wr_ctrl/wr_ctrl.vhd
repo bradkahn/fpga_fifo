@@ -11,7 +11,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity wr_ctrl is
-  generic(
+  generic (
     g_ADDR_WIDTH : positive := 4
   );
   port (
@@ -83,7 +83,7 @@ s_bin_next  <= r_binary_addr + 1 when ((i_INC and (not r_full)) = '1') else r_bi
 s_gray_next <= std_logic_vector(shift_right(s_bin_next, 1)) xor std_logic_vector(s_bin_next);
 
 -------------------------------------------------------------------------------
--- Full flag logic
+-- Full flag logic (see pg 11, Cummings)
 -------------------------------------------------------------------------------
 s_full_val  <=  '1' when  (((s_gray_next(g_ADDR_WIDTH) ) /= (i_SYNC_RD_PTR(g_ADDR_WIDTH))) and
                           ((s_gray_next(g_ADDR_WIDTH-1)) /= (i_SYNC_RD_PTR(g_ADDR_WIDTH-1))) and
