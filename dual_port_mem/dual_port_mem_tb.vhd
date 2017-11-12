@@ -21,6 +21,7 @@ architecture behavior of dual_port_mem_tb is
     component dual_port_mem
     port(
       i_CLK_a   : in  std_logic;
+      i_CLKEN_a : in  std_logic;
       i_ADDR_a  : in  std_logic_vector(3-1 downto 0);
       i_DIN_a   : in  std_logic_vector(16-1 downto 0);
       i_CLK_b   : in  std_logic;
@@ -33,6 +34,7 @@ architecture behavior of dual_port_mem_tb is
     -- Inputs
     ---------------------------------------------------------------------------
     signal i_CLK_a   : std_logic := '0';
+    signal i_CLKEN_a : std_logic := '0';
     signal i_ADDR_a  : std_logic_vector(3-1 downto 0) := (others => '0');
     signal i_DIN_a   : std_logic_vector(16-1 downto 0) := (others => '0');
     signal i_CLK_b   : std_logic := '0';
@@ -59,6 +61,7 @@ architecture behavior of dual_port_mem_tb is
 
     uut: dual_port_mem port map (
     i_CLK_a   => i_CLK_a,
+    i_CLKEN_a => i_CLKEN_a,
     i_ADDR_a  => i_ADDR_a,
     i_DIN_a   => i_DIN_a,
     i_CLK_b   => i_CLK_b,
@@ -73,14 +76,17 @@ architecture behavior of dual_port_mem_tb is
     -- Populate memory
     ---------------------------------------------------------------------------
 
+    i_CLKEN_a <= '1';
     write_loop : for i in 0 to 7 loop
       i_CLK_a   <= '0';
       i_ADDR_a  <= std_logic_vector(to_unsigned(i, 3));
       i_DIN_a   <= c_TEST_DATA(i);
       wait for c_CLK_A_PERIOD / 2;
-      i_CLK_a <= '1';
+      i_CLK_a   <= '1';
       wait for c_CLK_A_PERIOD / 2;
     end loop;
+    i_CLK_a   <= '0';
+    i_CLKEN_a <= '0';
 
     ---------------------------------------------------------------------------
     -- Read memory

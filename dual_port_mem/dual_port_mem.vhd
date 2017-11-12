@@ -19,6 +19,7 @@ entity dual_port_mem is
   port (
     -- Port A
     i_CLK_a   : in  std_logic;
+    i_CLKEN_a : in  std_logic;
     i_ADDR_a  : in  std_logic_vector(g_ADDR_WIDTH-1 downto 0);
     i_DIN_a   : in  std_logic_vector(g_DATA_WIDTH-1 downto 0);
 
@@ -34,11 +35,15 @@ architecture behavior of dual_port_mem is
   type t_mem_type is array ((2**g_ADDR_WIDTH)-1 downto 0) of std_logic_vector(g_DATA_WIDTH-1 downto 0);
   signal r_memory : t_mem_type := (others=>(others=>'0'));
 
+  signal s_clk_a : std_logic := '0';
+
 begin
 
-  port_a : process(i_CLK_a)
+  s_clk_a <= i_CLK_a when i_CLKEN_a = '1' else '0';
+
+  port_a : process(s_clk_a)
   begin
-    if rising_edge(i_CLK_a) then
+    if rising_edge(s_clk_a) then
       r_memory(to_integer(unsigned(i_ADDR_a))) <= i_DIN_a;
     end if;
   end process;
