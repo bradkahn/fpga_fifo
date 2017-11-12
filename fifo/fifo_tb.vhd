@@ -35,21 +35,21 @@ architecture behavior of fifo_tb is
     ---------------------------------------------------------------------------
     -- Inputs
     ---------------------------------------------------------------------------
-    signal i_CLK_WR    : in  std_logic := '0';
-    signal i_INC_WR    : in  std_logic := '0';
-    signal i_RST_WR    : in  std_logic := '0';
-    signal i_DAT_WR    : in  std_logic_vector(g_DATA_WIDTH-1 downto 0) := (others => '0');
+    signal i_CLK_WR    : std_logic := '0';
+    signal i_INC_WR    : std_logic := '0';
+    signal i_RST_WR    : std_logic := '0';
+    signal i_DAT_WR    : std_logic_vector(16-1 downto 0) := (others => '0');
 
-    signal i_CLK_RD    : in  std_logic := '0';
-    signal i_INC_RD    : in  std_logic := '0';
-    signal i_RST_RD    : in  std_logic := '0';
+    signal i_CLK_RD    : std_logic := '0';
+    signal i_INC_RD    : std_logic := '0';
+    signal i_RST_RD    : std_logic := '0';
 
     ---------------------------------------------------------------------------
     -- Outputs
     ---------------------------------------------------------------------------
-    signal o_FULL_FLAG : out std_logic;
-    signal o_DAT_RD    : out std_logic_vector(g_DATA_WIDTH-1 downto 0);
-    signal o_EMPTY_FLAG: out std_logic;
+    signal o_FULL_FLAG : std_logic;
+    signal o_DAT_RD    : std_logic_vector(16-1 downto 0);
+    signal o_EMPTY_FLAG: std_logic;
 
     ---------------------------------------------------------------------------
     -- Clock period definitions
@@ -82,11 +82,6 @@ architecture behavior of fifo_tb is
       o_EMPTY_FLAG  => o_EMPTY_FLAG
     );
 
-    clock : process
-    begin
-
-    end process;
-
   stimulus : process
   begin
 
@@ -105,10 +100,12 @@ architecture behavior of fifo_tb is
     i_RST_WR  <= '0';
     i_RST_RD  <= '0';
 
-    assert o_WR_ADDR  = (others => '0') report "write address not set to 0x0" severity error;
-    assert o_RD_ADDR  = (others => '0') report "read address not set to 0x0"  severity error;
-    assert o_WR_PTR   = (others => '0') report "write pointer not set to 0x0" severity error;
-    assert o_RD_PTR   = (others => '0') report "read pointer not set to 0x0"  severity error;
+    -- These are internal signals, can't be driven/read from this top-level.
+    -- They can, however, be monitored in ISIM.
+    -- assert o_WR_ADDR  = (others => '0') report "write address not set to 0x0" severity error;
+    -- assert o_RD_ADDR  = (others => '0') report "read address not set to 0x0"  severity error;
+    -- assert o_WR_PTR   = (others => '0') report "write pointer not set to 0x0" severity error;
+    -- assert o_RD_PTR   = (others => '0') report "read pointer not set to 0x0"  severity error;
 
     ---------------------------------------------------------------------------
     -- Fill FIFO
@@ -118,13 +115,19 @@ architecture behavior of fifo_tb is
     --          full flag goes high after 16th write
 
     -- *** NOTE: check if address 0x0 is skipped ***
+    i_INC_WR  <= '1';
+    writing : for i in 0 to 15 loop
+      i_DAT_WR  <=  c_TEST_DATA(i);
+      i_CLK_WR  <= '0';
+      -- i_INC_WR  <= '0';
+      wait for c_CLK_WR_PERIOD/2;
+      -- i_INC_WR  <= '1';
+      i_CLK_WR  <= '1';
+      wait for c_CLK_WR_PERIOD/2;
+    end loop;
 
-    i_DAT_WR  <=  c_TEST_DATA(0);
     i_CLK_WR  <= '0';
-
-    wait for c_CLK_WR_PERIOD/2;
-
-    i_CLK_WR  <= '0';
+    i_INC_WR  <= '0';
 
 
     ---------------------------------------------------------------------------
@@ -133,6 +136,18 @@ architecture behavior of fifo_tb is
     -- verify:
     --          full flag goes low after 1st read
     --          empty flag goes high after 16th read
+
+    -- *** NOTE: check if address 0x0 is skipped ***
+    i_INC_RD  <= '1';
+    reading : for i in 0 to 15 loop
+      i_CLK_RD  <= '0';
+      wait for c_CLK_RD_PERIOD/2;
+      i_CLK_RD  <= '1';
+      wait for c_CLK_RD_PERIOD/2;
+    end loop;
+
+    i_CLK_RD  <= '0';
+    i_INC_RD  <= '0';
 
     ---------------------------------------------------------------------------
     -- Read / write interleaving
