@@ -30,7 +30,7 @@ architecture RTL of rd_ctrl is
   signal r_binary_addr : unsigned(g_ADDR_WIDTH downto 0) := (others => '0'); -- set to (others => '1') if address zero gets skipped
   signal s_bin_next    : unsigned(g_ADDR_WIDTH downto 0) := (others => '0');
   signal s_gray_next   : std_logic_vector(g_ADDR_WIDTH downto 0) := (others => '0');
-  signal r_empty, s_empty_val  : std_logic := '0';
+  signal r_empty, s_empty_val  : std_logic := '1';
 
 begin
 
@@ -64,7 +64,7 @@ begin
     empty_flag : process(i_CLK, i_RST)
     begin
       if i_RST = '1' then
-        r_empty <= '0';
+        r_empty <= '1';
       elsif rising_edge(i_CLK) then
         r_empty <= s_empty_val;
       end if;
