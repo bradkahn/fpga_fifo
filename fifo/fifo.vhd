@@ -61,6 +61,7 @@ signal s_full_flag, s_clk_wr_en : std_logic;
   );
   port(
     i_CLK_a   : in  std_logic;
+    i_CLKEN_a : in  std_logic;
     i_ADDR_a  : in  std_logic_vector(g_ADDR_WIDTH-1 downto 0);
     i_DIN_a   : in  std_logic_vector(g_DATA_WIDTH-1 downto 0);
     i_CLK_b   : in  std_logic;
@@ -111,7 +112,8 @@ begin
     g_ADDR_WIDTH => g_ADDR_WIDTH
   )
   port map (
-    i_CLK_a   => s_clk_wr_en,  -- check
+    i_CLK_a   => i_CLK_WR,
+    i_CLKEN_a => s_clk_wr_en,
     i_ADDR_a  => s_addr_wr,
     i_DIN_a   => i_DAT_WR,
     i_CLK_b   => i_CLK_RD,
