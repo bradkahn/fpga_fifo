@@ -94,8 +94,9 @@ architecture behavior of fifo_tb is
     --          o_WR_ADDR, o_RD_ADDR, o_WR_PTR, o_RD_PTR is 0x0
     i_RST_WR  <= '1';
     i_RST_RD  <= '1';
+    wait for 1 ns;
     assert o_FULL_FLAG = '0'  report "full flag did not clear after reset"    severity error;
-    assert o_EMPTY_FLAG = '1' report "empty flag failed to clear after reset" severity error;
+    assert o_EMPTY_FLAG = '1' report "empty flag failed to set after reset" severity error;
     wait for 50 ns;
     i_RST_WR  <= '0';
     i_RST_RD  <= '0';
@@ -106,6 +107,9 @@ architecture behavior of fifo_tb is
     -- assert o_RD_ADDR  = (others => '0') report "read address not set to 0x0"  severity error;
     -- assert o_WR_PTR   = (others => '0') report "write pointer not set to 0x0" severity error;
     -- assert o_RD_PTR   = (others => '0') report "read pointer not set to 0x0"  severity error;
+
+    -- TODO:drive write and read clocks for whole duration, assert en/inc lines
+    --      to enable write/read.  
 
     ---------------------------------------------------------------------------
     -- Fill FIFO
@@ -138,13 +142,38 @@ architecture behavior of fifo_tb is
     --          empty flag goes high after 16th read
 
     -- *** NOTE: check if address 0x0 is skipped ***
+    -- i_INC_RD  <= '1';
+    -- reading : for i in 0 to 15 loop
+    --   i_CLK_RD  <= '0';
+    --   wait for c_CLK_RD_PERIOD/2;
+    --   i_CLK_RD  <= '1';
+    --   assert o_DAT_RD = c_TEST_DATA(i) report "Extracted word does not match test data" severity error;
+    --   wait for c_CLK_RD_PERIOD/2;
+    -- end loop;
+    --
+    -- i_CLK_RD  <= '0';
+    -- i_INC_RD  <= '0';
+
     i_INC_RD  <= '1';
-    reading : for i in 0 to 15 loop
-      i_CLK_RD  <= '0';
-      wait for c_CLK_RD_PERIOD/2;
-      i_CLK_RD  <= '1';
-      wait for c_CLK_RD_PERIOD/2;
-    end loop;
+
+    i_CLK_RD  <= '0';
+    wait for c_CLK_RD_PERIOD/2;
+    i_CLK_RD  <= '1';
+    -- assert o_DAT_RD = c_TEST_DATA(0) report "Extracted word does not match test data" severity error;
+    wait for c_CLK_RD_PERIOD/2;
+
+    i_CLK_RD  <= '0';
+    wait for c_CLK_RD_PERIOD/2;
+    i_CLK_RD  <= '1';
+    assert o_DAT_RD = c_TEST_DATA(0) report "Extracted word does not match test data" severity error;
+    wait for c_CLK_RD_PERIOD/2;
+
+    i_CLK_RD  <= '0';
+    wait for c_CLK_RD_PERIOD/2;
+    i_CLK_RD  <= '1';
+    assert o_DAT_RD = c_TEST_DATA(1) report "Extracted word does not match test data" severity error;
+    wait for c_CLK_RD_PERIOD/2;
+
 
     i_CLK_RD  <= '0';
     i_INC_RD  <= '0';
