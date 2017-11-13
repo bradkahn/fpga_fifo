@@ -157,10 +157,9 @@ architecture behavior of fifo_tb is
     -- Empty FIFO
     ---------------------------------------------------------------------------
     -- verify:
-    --          full flag goes low after 1st read (2nd for pessimistic full)
+    --          full flag goes low after 1st read
     --          empty flag goes high after 16th read
 
-    -- *** NOTE: check if address 0x0 is skipped ***
     wait until i_CLK_RD = '1';
     i_INC_RD  <= '1';
     reading : for i in 0 to 15 loop
@@ -179,6 +178,28 @@ architecture behavior of fifo_tb is
     -- Read / write interleaving
     ---------------------------------------------------------------------------
 
+    -- write x words
+    -- try read x+1 words, on cycle x+1, there should be no change in read addr from cycle x
+
+    wait until i_CLK_WR = '1';
+    i_INC_WR <= '1';
+    wait for c_CLK_WR_PERIOD;
+    i_DAT_WR <= x"1234";
+    wait for c_CLK_WR_PERIOD;
+    i_DAT_WR <= x"5678";
+    wait for c_CLK_WR_PERIOD;
+    i_DAT_WR <= x"abcd";
+    i_INC_WR <= '0';
+
+    wait until i_CLK_WR = '1';
+    i_INC_RD <= '1';
+    wait for c_CLK_RD_PERIOD; -- pessimistic empty flag reset
+    wait for c_CLK_RD_PERIOD; -- pessimistic empty flag reset
+    wait for c_CLK_RD_PERIOD; -- read 1
+    wait for c_CLK_RD_PERIOD; -- read 2
+    wait for c_CLK_RD_PERIOD; -- read 3
+    wait for c_CLK_RD_PERIOD; -- read 4 (illegal)
+    i_INC_RD <= '0';
 
 
     wait;
