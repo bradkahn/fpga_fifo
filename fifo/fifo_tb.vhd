@@ -150,6 +150,7 @@ architecture behavior of fifo_tb is
 
     end loop;
     i_INC_WR  <= '0';
+    wait until i_CLK_WR = '1';
     assert o_FULL_FLAG = '1' report "Full flag was not set after filling fifo contents" severity error;
 
     ---------------------------------------------------------------------------
