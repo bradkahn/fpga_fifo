@@ -7,6 +7,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity fifo_tb is
 end entity;
@@ -61,10 +62,14 @@ architecture behavior of fifo_tb is
     -- Test data
     ---------------------------------------------------------------------------
     type rom_type is array (0 to 15) of std_logic_vector(15 downto 0);
-    constant c_TEST_DATA : rom_type := (x"12AB", x"34CD", x"56EF", x"ABAB",
-                                        x"FEFE", x"4321", x"ABCD", x"BABE",
-                                        x"DEAD", x"BEEF", x"ABCD", x"1234",
-                                        x"5A5A", x"F0F0", x"B2AD", x"B0B0");
+    -- constant c_TEST_DATA : rom_type := (x"12AB", x"34CD", x"56EF", x"ABAB",
+    --                                     x"FEFE", x"4321", x"ABCD", x"BABE",
+    --                                     x"DEAD", x"BEEF", x"ABCD", x"1234",
+    --                                     x"5A5A", x"F0F0", x"B2AD", x"B0B0");
+    constant c_TEST_DATA : rom_type := (x"f000", x"f111", x"f222", x"f333",
+                                        x"f444", x"f555", x"f666", x"f777",
+                                        x"f888", x"f999", x"faaa", x"fbbb",
+                                        x"fccc", x"fddd", x"feee", x"ffff");
 
 
   begin
@@ -82,6 +87,23 @@ architecture behavior of fifo_tb is
       o_EMPTY_FLAG  => o_EMPTY_FLAG
     );
 
+  write_clk : process
+  begin
+    i_CLK_WR  <=  '0';
+    wait for c_CLK_WR_PERIOD/2;
+    i_CLK_WR  <=  '1';
+    wait for c_CLK_WR_PERIOD/2;
+  end process;
+
+  read_clk : process
+  begin
+    i_CLK_RD  <=  '0';
+    wait for c_CLK_RD_PERIOD/2;
+    i_CLK_RD  <=  '1';
+    wait for c_CLK_RD_PERIOD/2;
+  end process;
+
+
   stimulus : process
   begin
 
@@ -94,10 +116,9 @@ architecture behavior of fifo_tb is
     --          o_WR_ADDR, o_RD_ADDR, o_WR_PTR, o_RD_PTR is 0x0
     i_RST_WR  <= '1';
     i_RST_RD  <= '1';
-    wait for 1 ns;
+    wait for 50 ns;
     assert o_FULL_FLAG = '0'  report "full flag did not clear after reset"    severity error;
     assert o_EMPTY_FLAG = '1' report "empty flag failed to set after reset" severity error;
-    wait for 50 ns;
     i_RST_WR  <= '0';
     i_RST_RD  <= '0';
 
@@ -109,7 +130,7 @@ architecture behavior of fifo_tb is
     -- assert o_RD_PTR   = (others => '0') report "read pointer not set to 0x0"  severity error;
 
     -- TODO:drive write and read clocks for whole duration, assert en/inc lines
-    --      to enable write/read.  
+    --      to enable write/read.
 
     ---------------------------------------------------------------------------
     -- Fill FIFO
@@ -119,64 +140,39 @@ architecture behavior of fifo_tb is
     --          full flag goes high after 16th write
 
     -- *** NOTE: check if address 0x0 is skipped ***
+    wait until (i_RST_WR and i_RST_RD) = '0';
+
     i_INC_WR  <= '1';
     writing : for i in 0 to 15 loop
+      wait until i_CLK_WR = '1';
       i_DAT_WR  <=  c_TEST_DATA(i);
-      i_CLK_WR  <= '0';
-      -- i_INC_WR  <= '0';
-      wait for c_CLK_WR_PERIOD/2;
-      -- i_INC_WR  <= '1';
-      i_CLK_WR  <= '1';
-      wait for c_CLK_WR_PERIOD/2;
+      assert o_EMPTY_FLAG = '0' report "Empty flag was not cleared after after a write" severity error;
+
     end loop;
-
-    i_CLK_WR  <= '0';
     i_INC_WR  <= '0';
-
+    assert o_FULL_FLAG = '1' report "Full flag was not set after filling fifo contents" severity error;
 
     ---------------------------------------------------------------------------
     -- Empty FIFO
     ---------------------------------------------------------------------------
     -- verify:
-    --          full flag goes low after 1st read
+    --          full flag goes low after 1st read (2nd for pessimistic full)
     --          empty flag goes high after 16th read
 
     -- *** NOTE: check if address 0x0 is skipped ***
-    -- i_INC_RD  <= '1';
-    -- reading : for i in 0 to 15 loop
-    --   i_CLK_RD  <= '0';
-    --   wait for c_CLK_RD_PERIOD/2;
-    --   i_CLK_RD  <= '1';
-    --   assert o_DAT_RD = c_TEST_DATA(i) report "Extracted word does not match test data" severity error;
-    --   wait for c_CLK_RD_PERIOD/2;
-    -- end loop;
-    --
-    -- i_CLK_RD  <= '0';
-    -- i_INC_RD  <= '0';
-
+    wait until i_CLK_RD = '1';
     i_INC_RD  <= '1';
+    reading : for i in 0 to 15 loop
+      wait until i_CLK_RD = '1';
+      wait until i_CLK_RD = '0';
+      assert o_FULL_FLAG = '0' report "Full flag was not cleared after a read" severity error;
+      assert o_DAT_RD = c_TEST_DATA(i) report "Extracted word [" & integer'image(to_integer(unsigned(o_DAT_RD))) &
+                                              "] after count [" & integer'image(i) & "] does not match test data [" &
+                                              integer'image(to_integer(unsigned(c_TEST_DATA(i)))) &"]" severity error;
 
-    i_CLK_RD  <= '0';
-    wait for c_CLK_RD_PERIOD/2;
-    i_CLK_RD  <= '1';
-    -- assert o_DAT_RD = c_TEST_DATA(0) report "Extracted word does not match test data" severity error;
-    wait for c_CLK_RD_PERIOD/2;
-
-    i_CLK_RD  <= '0';
-    wait for c_CLK_RD_PERIOD/2;
-    i_CLK_RD  <= '1';
-    assert o_DAT_RD = c_TEST_DATA(0) report "Extracted word does not match test data" severity error;
-    wait for c_CLK_RD_PERIOD/2;
-
-    i_CLK_RD  <= '0';
-    wait for c_CLK_RD_PERIOD/2;
-    i_CLK_RD  <= '1';
-    assert o_DAT_RD = c_TEST_DATA(1) report "Extracted word does not match test data" severity error;
-    wait for c_CLK_RD_PERIOD/2;
-
-
-    i_CLK_RD  <= '0';
+    end loop;
     i_INC_RD  <= '0';
+    assert o_EMPTY_FLAG = '1' report "Empty flag was not set after reading all the fifo contents" severity error;
 
     ---------------------------------------------------------------------------
     -- Read / write interleaving
