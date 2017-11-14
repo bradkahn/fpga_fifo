@@ -191,7 +191,7 @@ architecture behavior of fifo_tb is
     i_DAT_WR <= x"abcd";
     i_INC_WR <= '0';
 
-    wait until i_CLK_WR = '1';
+    wait until i_CLK_RD = '1';
     i_INC_RD <= '1';
     wait for c_CLK_RD_PERIOD; -- pessimistic empty flag reset
     wait for c_CLK_RD_PERIOD; -- pessimistic empty flag reset
