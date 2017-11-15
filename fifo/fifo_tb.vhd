@@ -8,6 +8,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use IEEE.std_logic_textio.all;
+
+library std;
+use std.textio.all;
 
 entity fifo_tb is
 end entity;
@@ -105,6 +109,7 @@ architecture behavior of fifo_tb is
 
 
   stimulus : process
+    variable output_line : line;
   begin
 
     ---------------------------------------------------------------------------
@@ -124,6 +129,7 @@ architecture behavior of fifo_tb is
 
     -- These are internal signals, can't be driven/read from this top-level.
     -- They can, however, be monitored in ISIM.
+    -- TODO: these must be tested in write and read controllers.
     -- assert o_WR_ADDR  = (others => '0') report "write address not set to 0x0" severity error;
     -- assert o_RD_ADDR  = (others => '0') report "read address not set to 0x0"  severity error;
     -- assert o_WR_PTR   = (others => '0') report "write pointer not set to 0x0" severity error;
@@ -142,16 +148,30 @@ architecture behavior of fifo_tb is
     -- *** NOTE: check if address 0x0 is skipped ***
     wait until (i_RST_WR and i_RST_RD) = '0';
 
-    i_INC_WR  <= '1';
-    writing : for i in 0 to 15 loop
-      wait until i_CLK_WR = '1';
-      i_DAT_WR  <=  c_TEST_DATA(i);
-      assert o_EMPTY_FLAG = '0' report "Empty flag was not cleared after after a write" severity error;
+    write(output_line, " ");
+    writeline(output, output_line);
+    write(output_line, "*****************************************************");
+    writeline(output, output_line);
+    write(output_line, "FILLING UP FIFO");
+    writeline(output, output_line);
+    write(output_line, "*****************************************************");
+    writeline(output, output_line);
 
+    wait until i_CLK_WR = '1';
+    i_INC_WR  <= '1';
+    report "wr cycle 1: set i_INC_WR to 1" severity note;
+    writing : for i in 0 to 15 loop
+      -- wait until i_CLK_WR = '1';
+      wait for c_CLK_WR_PERIOD;
+      report "wr cycle " & integer'image(i+2) severity note;
+      hwrite(output_line, c_TEST_DATA(i));
+      writeline(output, output_line);
+      i_DAT_WR  <=  c_TEST_DATA(i);
     end loop;
     i_INC_WR  <= '0';
     wait until i_CLK_WR = '1';
     assert o_FULL_FLAG = '1' report "Full flag was not set after filling fifo contents" severity error;
+    assert o_FULL_FLAG /= '1' report "Full flag was successfully set after filling fifo contents" severity note;
 
     ---------------------------------------------------------------------------
     -- Empty FIFO
@@ -159,20 +179,35 @@ architecture behavior of fifo_tb is
     -- verify:
     --          full flag goes low after 1st read
     --          empty flag goes high after 16th read
+    -- hwrite(output_line, c_TEST_DATA(0));
+
+    write(output_line, " ");
+    writeline(output, output_line);
+    write(output_line, "*****************************************************");
+    writeline(output, output_line);
+    write(output_line, "EMPTYING FIFO");
+    writeline(output, output_line);
+    write(output_line, "*****************************************************");
+    writeline(output, output_line);
 
     wait until i_CLK_RD = '1';
     i_INC_RD  <= '1';
+    report "re cycle 1: set i_INC_RE to 1" severity note;
+    wait for c_CLK_RD_PERIOD;
+    report "re cycle 2: nothing to do" severity note;
     reading : for i in 0 to 15 loop
-      wait until i_CLK_RD = '1';
-      wait until i_CLK_RD = '0';
-      assert o_FULL_FLAG = '0' report "Full flag was not cleared after a read" severity error;
+      wait for c_CLK_RD_PERIOD;
+      report "re cycle " & integer'image(i+3) severity note;
       assert o_DAT_RD = c_TEST_DATA(i) report "Extracted word [" & integer'image(to_integer(unsigned(o_DAT_RD))) &
                                               "] after count [" & integer'image(i) & "] does not match test data [" &
                                               integer'image(to_integer(unsigned(c_TEST_DATA(i)))) &"]" severity error;
+      hwrite(output_line, o_DAT_RD, field=>10);
+      writeline(output, output_line);
 
     end loop;
     i_INC_RD  <= '0';
     assert o_EMPTY_FLAG = '1' report "Empty flag was not set after reading all the fifo contents" severity error;
+    assert o_EMPTY_FLAG /= '1' report "Empty flag was successfully set after reading all the fifo contents" severity note;
 
     ---------------------------------------------------------------------------
     -- Read / write interleaving
@@ -180,6 +215,14 @@ architecture behavior of fifo_tb is
 
     -- write x words
     -- try read x+1 words, on cycle x+1, there should be no change in read addr from cycle x
+    write(output_line, " ");
+    writeline(output, output_line);
+    write(output_line, "*****************************************************");
+    writeline(output, output_line);
+    write(output_line, "R/W INTERLEAVING");
+    writeline(output, output_line);
+    write(output_line, "*****************************************************");
+    writeline(output, output_line);
 
     wait until i_CLK_WR = '1';
     i_INC_WR <= '1';
@@ -193,12 +236,37 @@ architecture behavior of fifo_tb is
 
     wait until i_CLK_RD = '1';
     i_INC_RD <= '1';
+    report "re cycle 1: set i_INC_RD to 1" severity note;
+
     wait for c_CLK_RD_PERIOD; -- pessimistic empty flag reset
-    wait for c_CLK_RD_PERIOD; -- pessimistic empty flag reset
+    report "re cycle 2:" severity note;
+    hwrite(output_line, o_DAT_RD, field=>10);
+    writeline(output, output_line);
+
+    wait for c_CLK_RD_PERIOD; -- pessimistic empty flag reset;
+    report "re cycle 3:" severity note;
+    hwrite(output_line, o_DAT_RD, field=>10);
+    writeline(output, output_line);
+
     wait for c_CLK_RD_PERIOD; -- read 1
+    report "re cycle 4:" severity note;
+    hwrite(output_line, o_DAT_RD, field=>10);
+    writeline(output, output_line);
+
     wait for c_CLK_RD_PERIOD; -- read 2
+    report "re cycle 5:" severity note;
+    hwrite(output_line, o_DAT_RD, field=>10);
+    writeline(output, output_line);
+
     wait for c_CLK_RD_PERIOD; -- read 3
+    report "re cycle 6:" severity note;
+    hwrite(output_line, o_DAT_RD, field=>10);
+    writeline(output, output_line);
+
     wait for c_CLK_RD_PERIOD; -- read 4 (illegal)
+    report "re cycle 7:" severity note;
+    hwrite(output_line, o_DAT_RD, field=>10);
+    writeline(output, output_line);
     i_INC_RD <= '0';
 
 
