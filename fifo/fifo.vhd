@@ -32,16 +32,16 @@ end entity;
 
 architecture structural of fifo is
 
--------------------------------------------------------------------------------
--- Interconnecting signal declarations
--------------------------------------------------------------------------------
-signal s_addr_wr, s_addr_rd : std_logic_vector(g_ADDR_WIDTH-1 downto 0);
-signal s_ptr_wr, s_synch_ptr_wr, s_ptr_rd, s_synch_ptr_rd : std_logic_vector(g_ADDR_WIDTH downto 0);
-signal s_full_flag, s_clk_wr_en : std_logic;
+  -----------------------------------------------------------------------------
+  -- Interconnecting signal declarations
+  -----------------------------------------------------------------------------
+  signal s_addr_wr, s_addr_rd : std_logic_vector(g_ADDR_WIDTH-1 downto 0);
+  signal s_ptr_wr, s_synch_ptr_wr, s_ptr_rd, s_synch_ptr_rd : std_logic_vector(g_ADDR_WIDTH downto 0);
+  signal s_full_flag, s_clk_wr_en : std_logic;
 
--------------------------------------------------------------------------------
--- Component declarations
--------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------
+  -- Component declarations
+  -----------------------------------------------------------------------------
   component ptr_sync
   generic (
     g_ADDR_WIDTH : positive := g_ADDR_WIDTH
