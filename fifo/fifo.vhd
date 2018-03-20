@@ -155,7 +155,7 @@ begin
   )
   port map (
     i_PTR_IN  => s_ptr_rd,
-    i_CLK     => i_CLK_RD,
+    i_CLK     => i_CLK_WR,
     i_RST     => i_RST_WR,
     o_PTR_OUT => s_synch_ptr_rd
   );
@@ -166,7 +166,7 @@ begin
   )
   port map (
     i_PTR_IN  => s_ptr_wr,
-    i_CLK     => i_CLK_WR,
+    i_CLK     => i_CLK_RD,
     i_RST     => i_RST_RD,
     o_PTR_OUT => s_synch_ptr_wr
   );
